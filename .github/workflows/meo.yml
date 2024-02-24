@@ -1,23 +1,15 @@
-version: "3"
+name: Run Docker Container
 
-services:
-  app:
-    image: dorowu/ubuntu-desktop-lxde-vnc
-    ports:
-      - "6080:80"
-    environment:
-      - ALSADEV=hw:2,0
-    shm_size: "2g"
-    restart: "always"
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+on: [push]
 
-workflows:
-  start-docker:
-    jobs:
-      - start-app:
-          type: "service"
-          service: "app"
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    triggers:
-      - manual: {}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run Docker Container
+      run: |
+        docker run -d -it --rm -p 6080:80 --shm-size 2g -e ALSADEV=hw:2,0 dorowu/ubuntu-desktop-lxde-vnc
