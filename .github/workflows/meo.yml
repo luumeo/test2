@@ -10,6 +10,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Allow port 6080
+      run: sudo ufw allow 6080
+
     - name: Run Docker Container
       run: |
         docker run -d -it --rm -p 6080:80 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc
