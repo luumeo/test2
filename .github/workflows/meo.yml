@@ -11,3 +11,13 @@ services:
     restart: "always"
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+
+workflows:
+  start-docker:
+    jobs:
+      - start-app:
+          type: "service"
+          service: "app"
+
+    triggers:
+      - manual: {}
