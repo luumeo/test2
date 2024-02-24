@@ -17,9 +17,11 @@ jobs:
     - name: Sleep for a while to let container start
       run: sleep 30
 
-    - name: Get container IP
-      id: container_ip
-      run: echo "::set-output name=ip::$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -q))"
+    - name: Get Public IP
+      id: get_public_ip
+      run: |
+        PUBLIC_IP=$(curl -s https://ifconfig.me/ip)
+        echo "::set-output name=public_ip::$PUBLIC_IP"
 
-    - name: Print container IP
-      run: echo "Container IP Address - ${{ steps.container_ip.outputs.ip }}"
+    - name: Print Public IP
+      run: echo "Public IP Address - ${{ steps.get_public_ip.outputs.public_ip }}"
