@@ -10,12 +10,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Allow port 6080
-      run: sudo ufw allow 6080
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Get Container IP
+      id: get_container_ip
+      run: |
+        CONTAINER_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_id_or_name>)
+        echo "::set-output name=container_ip::$CONTAINER_IP"
+
+    - name: SSH Tunneling
+      run: |
+        sshpass -p 'your_password' ssh -o StrictHostKeyChecking=no user@${{ steps.get_container_ip.outputs.container_ip }} -NL 5901:localhost:5901
 
     - name: Run Docker Container
       run: |
-        docker run -d -it --rm -p 6080:80 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc
+        docker run -d -it --rm -p 5901:5901 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc
 
     - name: Sleep for a while to let container start
       run: sleep 30
@@ -26,5 +36,7 @@ jobs:
         PUBLIC_IP=$(curl -s https://ifconfig.me/ip)
         echo "::set-output name=public_ip::$PUBLIC_IP"
 
-    - name: Print Public IP
-      run: echo "Public IP Address - ${{ steps.get_public_ip.outputs.public_ip }}"
+    - name: Print Login Information
+      run: |
+        echo "Intermediary Server IP: user@${{ steps.get_container_ip.outputs.container_ip }}"
+        echo "Public IP Address: ${{ steps.get_public_ip.outputs.public_ip }}"
