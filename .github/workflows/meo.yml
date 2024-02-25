@@ -29,7 +29,7 @@ jobs:
     - name: Run Docker Container with VNC and SSH and Get ID
       id: run_container
       run: |
-        docker run -d -it --rm -p 5901:5901 -p 2232:22 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc bash -c "apt-get update && apt-get install -y openssh-server && service ssh start && /bin/bash"
+        docker run -d -it --rm -p 5901:5901 -p 2222:2222 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc bash -c "apt-get update && apt-get install -y openssh-server && sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config && service ssh start && /bin/bash"
         CONTAINER_ID=$(docker ps --format "{{.ID}}")
         echo "::set-output name=container_id::$CONTAINER_ID"
 
@@ -44,7 +44,7 @@ jobs:
     # SSH Tunneling
     - name: SSH Tunneling
       run: |
-        sshpass -p 'your_password' ssh -o StrictHostKeyChecking=no -p 2232 user@${{ steps.get_container_ip.outputs.container_ip }} -NL 5901:localhost:5901
+        sshpass -p 'your_password' ssh -o StrictHostKeyChecking=no -p 2222 user@${{ steps.get_container_ip.outputs.container_ip }} -NL 5901:localhost:5901
 
     # Print Container IP
     - name: Print Container IP
