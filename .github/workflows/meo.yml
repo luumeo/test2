@@ -29,7 +29,7 @@ jobs:
     - name: Run Docker Container and Get ID
       id: run_container
       run: |
-        CONTAINER_ID=$(docker run -d -it --rm -p 5901:5901 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc)
+        CONTAINER_ID=$(docker run -d -it --rm -p 5901:5901 -p 2222:22 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc)
         echo "::set-output name=container_id::$CONTAINER_ID"
 
     # Get the IP address of the running container
@@ -43,7 +43,7 @@ jobs:
     # SSH Tunneling
     - name: SSH Tunneling
       run: |
-        sshpass -p 'your_password' ssh -o StrictHostKeyChecking=no user@${{ steps.get_container_ip.outputs.container_ip }} -p 5901
+        sshpass -p 'your_password' ssh -o StrictHostKeyChecking=no -p 2222 user@${{ steps.get_container_ip.outputs.container_ip }} -NL 5901:localhost:5901
 
     # Print Container IP
     - name: Print Container IP
