@@ -1,4 +1,4 @@
-name: Run Docker Container with VNC
+name: Run Docker Container with VNC and SSH
 
 on: [push]
 
@@ -25,11 +25,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-ce
 
-    # Run the Docker container and get its ID
-    - name: Run Docker Container and Get ID
+    # Run the Docker container with VNC and SSH and get its ID
+    - name: Run Docker Container with VNC and SSH and Get ID
       id: run_container
       run: |
-        CONTAINER_ID=$(docker run -d -it --rm -p 5901:5901 -p 2222:22 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc)
+        docker run -d -it --rm -p 5901:5901 -p 2222:22 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc bash -c "apt-get update && apt-get install -y openssh-server && service ssh start && /bin/bash"
+        CONTAINER_ID=$(docker ps --format "{{.ID}}")
         echo "::set-output name=container_id::$CONTAINER_ID"
 
     # Get the IP address of the running container
