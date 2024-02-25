@@ -1,51 +1,31 @@
-name: Run Docker Container with VNC and SSH
+name: Build and Run TrustDesk Container
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  build_and_run_container:
     runs-on: ubuntu-latest
 
     steps:
-    # Check out the repository
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v2
 
-    # Install sshpass for SSH tunneling
-    - name: Install sshpass
-      run: sudo apt-get install -y sshpass
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-    # Install Docker CLI
-    - name: Install Docker CLI
+    - name: Build Docker image
+      run: docker build -t ubuntu_trustdesk .
+
+    - name: Run Docker container
+      run: docker run -d --name trustdesk_container ubuntu_trustdesk
+
+    - name: Get TrustDesk ID and Password
       run: |
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-        sudo apt-get update
-        sudo apt-get install -y docker-ce
-
-    # Run the Docker container with VNC and SSH and get its ID
-    - name: Run Docker Container with VNC and SSH and Get ID
-      id: run_container
-      run: |
-        docker run -d -it --rm -p 5901:5901 -p 2222:2222 --shm-size 2g -e ALSADEV=hw:2,0 -e VNC_PW=meo dorowu/ubuntu-desktop-lxde-vnc bash -c "apt-get update && apt-get install -y openssh-server && sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config && service ssh start && /bin/bash"
-        CONTAINER_ID=$(docker ps --format "{{.ID}}")
-        echo "::set-output name=container_id::$CONTAINER_ID"
-
-    # Get the IP address of the running container
-    - name: Get Container IP
-      id: get_container_ip
-      run: |
-        CONTAINER_ID=${{ steps.run_container.outputs.container_id }}
-        CONTAINER_IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $CONTAINER_ID)
-        echo "::set-output name=container_ip::$CONTAINER_IP"
-
-    # SSH Tunneling
-    - name: SSH Tunneling
-      run: |
-        sshpass -p 'your_password' ssh -o StrictHostKeyChecking=no -p 2222 user@${{ steps.get_container_ip.outputs.container_ip }} -NL 5901:localhost:5901
-
-    # Print Container IP
-    - name: Print Container IP
-      run: echo "Container IP Address - ${{ steps.get_container_ip.outputs.container_ip }}"
+        sleep 10 # Wait for TrustDesk to initialize
+        TRUSTDESK_ID=$(docker exec trustdesk_container trustdesk get-id)
+        TRUSTDESK_PASSWORD=$(docker exec trustdesk_container trustdesk get-password)
+        echo "TrustDesk ID: $TRUSTDESK_ID"
+        echo "TrustDesk Password: $TRUSTDESK_PASSWORD"
